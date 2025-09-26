@@ -5,18 +5,6 @@ set -e
 
 echo "🚀 Building MuseTalk Docker Image..."
 
-# Check if Docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo "❌ Docker is not running. Please start Docker first."
-    exit 1
-fi
-
-# Check if NVIDIA Docker runtime is available
-if ! docker run --rm --gpus all nvidia/cuda:12.1-base-ubuntu22.04 nvidia-smi > /dev/null 2>&1; then
-    echo "❌ NVIDIA Docker runtime not available. Please install nvidia-docker2."
-    exit 1
-fi
-
 # Create directories
 mkdir -p input output configs
 
