@@ -1,0 +1,33 @@
+# Core ML/DL packages
+torch==2.3.1
+torchvision==0.18.1
+torchaudio==2.3.1
+diffusers==0.21.4
+transformers==4.35.2
+accelerate==0.24.1
+xformers==0.0.27
+
+# Computer Vision
+opencv-python==4.8.1.78
+opencv-contrib-python==4.8.1.78
+face-alignment==1.3.5
+scikit-image==0.21.0
+
+# Audio processing
+librosa==0.10.1
+soundfile==0.12.1
+pydub==0.25.1
+resampy==0.4.2
+
+# Utilities
+numpy==1.24.4
+scipy==1.11.4
+pillow==10.0.1
+omegaconf==2.3.0
+einops==0.7.0
+
+# MMlab (installed separately via mim)
+# mmengine
+# mmcv==2.0.1
+# mmdet==3.1.0
+# mmpose==1.1.0

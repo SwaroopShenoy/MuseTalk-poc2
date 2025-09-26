@@ -1,5 +1,5 @@
-# Use CUDA 12.1 base image (compatible with CUDA 12.9)
-FROM nvidia/cuda:12.1-devel-ubuntu22.04
+# Use CUDA 12.4 base image (compatible with CUDA 12.9)
+FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
@@ -36,8 +36,8 @@ WORKDIR /app
 # Clone MuseTalk repository
 RUN git clone https://github.com/TMElyralab/MuseTalk.git .
 
-# Install PyTorch for CUDA 12.1 (compatible with 12.9)
-RUN pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+# Install PyTorch for CUDA 12.4 (compatible with 12.9)
+RUN pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu124
 
 # Install core dependencies from requirements.txt
 # Key packages: diffusers, transformers, opencv-python, etc.
@@ -53,7 +53,7 @@ RUN pip install \
     soundfile==0.12.1 \
     omegaconf==2.3.0 \
     einops==0.7.0 \
-    xformers==0.0.22.post7 \
+    xformers==0.0.27 \
     pillow==10.0.1 \
     numpy==1.24.4 \
     pydub==0.25.1 \
