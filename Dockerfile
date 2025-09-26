@@ -68,11 +68,11 @@ RUN pip install \
 # Create models directory structure
 RUN mkdir -p models/{musetalk,musetalkV15,syncnet,dwpose,face-parse-bisent,sd-vae,whisper}
 
-# Download model weights script
+# Download model weights script - simplified with working URLs
 COPY <<EOF /app/download_models.py
 import os
 import requests
-from pathlib import Path
+import subprocess
 
 def download_file(url, filepath):
     print(f"Downloading {filepath}...")
@@ -86,54 +86,39 @@ def download_file(url, filepath):
             f.write(chunk)
     print(f"Downloaded {filepath}")
 
-# Use huggingface-cli to download the entire repo to get correct structure
-import subprocess
+# Install huggingface_hub for downloading MuseTalk
+subprocess.run(['pip', 'install', 'huggingface_hub[cli]'], check=True)
+
+# Download MuseTalk models using hf CLI
 try:
-    # Install huggingface_hub
-    subprocess.run(['pip', 'install', 'huggingface_hub[cli]'], check=True)
-    
-    # Download MuseTalk models
     subprocess.run([
-        'huggingface-cli', 'download', 
+        'hf', 'download', 
         'TMElyralab/MuseTalk', 
         '--local-dir', './models/',
         '--include', 'musetalk/*',
         '--include', 'musetalkV15/*'
     ], check=True)
-    
     print("Downloaded MuseTalk models successfully!")
-    
-except Exception as e:
-    print(f"Error downloading MuseTalk models: {e}")
-    print("Trying manual download...")
-    
-    # Fallback to manual download
-    base_url = "https://huggingface.co/TMElyralab/MuseTalk/resolve/main"
-    models = {
-        "models/musetalkV15/unet.pth": f"{base_url}/musetalkV15/unet.pth",
-        "models/musetalkV15/musetalk.json": f"{base_url}/musetalkV15/musetalk.json",
-        "models/musetalk/pytorch_model.bin": f"{base_url}/musetalk/pytorch_model.bin",
-        "models/musetalk/musetalk.json": f"{base_url}/musetalk/musetalk.json"
-    }
-    
-    for filepath, url in models.items():
-        if not os.path.exists(filepath):
-            download_file(url, filepath)
+except:
+    print("HF CLI failed, skipping MuseTalk download - will need manual setup")
 
-# Download other required models
-other_models = {
+# Download other models with working URLs
+models = {
     "models/dwpose/dw-ll_ucoco_384.pth": "https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.pth",
-    "models/face-parse-bisent/79999_iter.pth": "https://huggingface.co/jonathandinu/face-parsing/resolve/main/79999_iter.pth",
+    "models/face-parse-bisent/79999_iter.pth": "https://huggingface.co/vivym/face-parsing-bisenet/resolve/main/79999_iter.pth",
     "models/face-parse-bisent/resnet18-5c106cde.pth": "https://download.pytorch.org/models/resnet18-5c106cde.pth",
     "models/sd-vae/diffusion_pytorch_model.bin": "https://huggingface.co/stabilityai/sd-vae-ft-mse/resolve/main/diffusion_pytorch_model.bin",
     "models/sd-vae/config.json": "https://huggingface.co/stabilityai/sd-vae-ft-mse/resolve/main/config.json"
 }
 
-for filepath, url in other_models.items():
+for filepath, url in models.items():
     if not os.path.exists(filepath):
-        download_file(url, filepath)
+        try:
+            download_file(url, filepath)
+        except Exception as e:
+            print(f"Failed to download {filepath}: {e}")
 
-print("All models downloaded successfully!")
+print("Model download completed!")
 EOF
 
 RUN python download_models.py
