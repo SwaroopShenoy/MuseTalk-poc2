@@ -86,23 +86,50 @@ def download_file(url, filepath):
             f.write(chunk)
     print(f"Downloaded {filepath}")
 
-# MuseTalk 1.5 weights
-base_url = "https://huggingface.co/TMElyralab/MuseTalk/resolve/main"
+# Use huggingface-cli to download the entire repo to get correct structure
+import subprocess
+try:
+    # Install huggingface_hub
+    subprocess.run(['pip', 'install', 'huggingface_hub[cli]'], check=True)
+    
+    # Download MuseTalk models
+    subprocess.run([
+        'huggingface-cli', 'download', 
+        'TMElyralab/MuseTalk', 
+        '--local-dir', './models/',
+        '--include', 'musetalk/*',
+        '--include', 'musetalkV15/*'
+    ], check=True)
+    
+    print("Downloaded MuseTalk models successfully!")
+    
+except Exception as e:
+    print(f"Error downloading MuseTalk models: {e}")
+    print("Trying manual download...")
+    
+    # Fallback to manual download
+    base_url = "https://huggingface.co/TMElyralab/MuseTalk/resolve/main"
+    models = {
+        "models/musetalkV15/unet.pth": f"{base_url}/musetalkV15/unet.pth",
+        "models/musetalkV15/musetalk.json": f"{base_url}/musetalkV15/musetalk.json",
+        "models/musetalk/pytorch_model.bin": f"{base_url}/musetalk/pytorch_model.bin",
+        "models/musetalk/musetalk.json": f"{base_url}/musetalk/musetalk.json"
+    }
+    
+    for filepath, url in models.items():
+        if not os.path.exists(filepath):
+            download_file(url, filepath)
 
-models = {
-    "models/musetalkV15/unet.pth": f"{base_url}/pytorch_model.bin",
-    "models/musetalkV15/musetalk.json": f"{base_url}/musetalk.json",
+# Download other required models
+other_models = {
     "models/dwpose/dw-ll_ucoco_384.pth": "https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.pth",
     "models/face-parse-bisent/79999_iter.pth": "https://huggingface.co/jonathandinu/face-parsing/resolve/main/79999_iter.pth",
     "models/face-parse-bisent/resnet18-5c106cde.pth": "https://download.pytorch.org/models/resnet18-5c106cde.pth",
     "models/sd-vae/diffusion_pytorch_model.bin": "https://huggingface.co/stabilityai/sd-vae-ft-mse/resolve/main/diffusion_pytorch_model.bin",
-    "models/sd-vae/config.json": "https://huggingface.co/stabilityai/sd-vae-ft-mse/resolve/main/config.json",
-    "models/whisper/pytorch_model.bin": "https://huggingface.co/openai/whisper-tiny/resolve/main/pytorch_model.bin",
-    "models/whisper/config.json": "https://huggingface.co/openai/whisper-tiny/resolve/main/config.json",
-    "models/whisper/preprocessor_config.json": "https://huggingface.co/openai/whisper-tiny/resolve/main/preprocessor_config.json"
+    "models/sd-vae/config.json": "https://huggingface.co/stabilityai/sd-vae-ft-mse/resolve/main/config.json"
 }
 
-for filepath, url in models.items():
+for filepath, url in other_models.items():
     if not os.path.exists(filepath):
         download_file(url, filepath)
 
