@@ -59,12 +59,8 @@ RUN pip install \
     face-alignment==1.3.5 \
     resampy==0.4.2
 
-# Install MMlab packages (required for pose detection)
-RUN pip install --no-cache-dir -U openmim && \
-    mim install mmengine && \
-    mim install "mmcv==2.0.1" && \
-    mim install "mmdet==3.1.0" && \
-    mim install "mmpose==1.1.0"
+# Skip MMlab packages for now - they're mainly for training
+# Can be added later if needed for advanced pose detection
 
 # Install whisper for audio processing
 RUN pip install --editable ./musetalk/whisper
