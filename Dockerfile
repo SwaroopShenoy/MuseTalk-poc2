@@ -58,10 +58,10 @@ RUN pip install torch==2.5.1+cu124 torchvision==0.20.1+cu124 torchaudio==2.5.1+c
 
 # Install core dependencies with compatible versions
 RUN pip install \
-    diffusers==0.29.2 \
-    transformers==4.44.2 \
-    huggingface_hub==0.24.6 \
-    accelerate==0.34.2 \
+    diffusers==0.21.4 \
+    transformers==4.35.2 \
+    huggingface_hub==0.17.3 \
+    accelerate==0.24.1 \
     opencv-python==4.8.1.78 \
     opencv-contrib-python==4.8.1.78 \
     scipy==1.11.4 \
@@ -70,20 +70,20 @@ RUN pip install \
     soundfile==0.12.1 \
     omegaconf==2.3.0 \
     einops==0.7.0 \
-    xformers==0.0.28.post3 \
+    xformers==0.0.22.post7 \
     pillow==10.0.1 \
     numpy==1.24.4 \
     pydub==0.25.1 \
     face-alignment==1.3.5 \
     resampy==0.4.2
 
-# Install MMlab packages with exact compatible versions
+# Install compatible MMlab packages with older stable versions
 RUN pip install --no-cache-dir -U openmim && \
     pip install setuptools-scm && \
-    mim install mmengine==0.10.4 && \
-    mim install "mmcv==2.1.0" && \
-    mim install "mmdet==3.3.0" && \
-    mim install "mmpose==1.3.2"
+    mim install mmengine==0.8.5 && \
+    mim install "mmcv==2.0.1" && \
+    mim install "mmdet==3.1.0" && \
+    mim install "mmpose==1.1.0"
 
 # Skip whisper installation - MuseTalk likely includes its own audio processing
 # If needed, can install later: pip install --no-deps openai-whisper tiktoken
