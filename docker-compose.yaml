@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  musetalk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: musetalk:latest
+    container_name: musetalk_container
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./input:/app/input
+      - ./output:/app/output
+      - ./configs:/app/configs  # For custom configs
+    ports:
+      - "7860:7860"  # For Gradio interface
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

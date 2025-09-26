@@ -1,0 +1,168 @@
+# Use CUDA 12.1 base image (compatible with CUDA 12.9)
+FROM nvidia/cuda:12.1-devel-ubuntu22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV CUDA_VISIBLE_DEVICES=0
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3.10-dev \
+    python3-pip \
+    git \
+    wget \
+    curl \
+    ffmpeg \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.10 as default
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip
+
+# Set working directory
+WORKDIR /app
+
+# Clone MuseTalk repository
+RUN git clone https://github.com/TMElyralab/MuseTalk.git .
+
+# Install PyTorch for CUDA 12.1 (compatible with 12.9)
+RUN pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+
+# Install core dependencies from requirements.txt
+# Key packages: diffusers, transformers, opencv-python, etc.
+RUN pip install \
+    diffusers==0.21.4 \
+    transformers==4.35.2 \
+    accelerate==0.24.1 \
+    opencv-python==4.8.1.78 \
+    opencv-contrib-python==4.8.1.78 \
+    scipy==1.11.4 \
+    scikit-image==0.21.0 \
+    librosa==0.10.1 \
+    soundfile==0.12.1 \
+    omegaconf==2.3.0 \
+    einops==0.7.0 \
+    xformers==0.0.22.post7 \
+    pillow==10.0.1 \
+    numpy==1.24.4 \
+    pydub==0.25.1 \
+    face-alignment==1.3.5 \
+    resampy==0.4.2
+
+# Install MMlab packages (required for pose detection)
+RUN pip install --no-cache-dir -U openmim && \
+    mim install mmengine && \
+    mim install "mmcv==2.0.1" && \
+    mim install "mmdet==3.1.0" && \
+    mim install "mmpose==1.1.0"
+
+# Install whisper for audio processing
+RUN pip install --editable ./musetalk/whisper
+
+# Create models directory structure
+RUN mkdir -p models/{musetalk,musetalkV15,syncnet,dwpose,face-parse-bisent,sd-vae,whisper}
+
+# Download model weights script
+COPY <<EOF /app/download_models.py
+import os
+import requests
+from pathlib import Path
+
+def download_file(url, filepath):
+    print(f"Downloading {filepath}...")
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    
+    with open(filepath, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
+    print(f"Downloaded {filepath}")
+
+# MuseTalk 1.5 weights
+base_url = "https://huggingface.co/TMElyralab/MuseTalk/resolve/main"
+
+models = {
+    "models/musetalkV15/unet.pth": f"{base_url}/pytorch_model.bin",
+    "models/musetalkV15/musetalk.json": f"{base_url}/musetalk.json",
+    "models/dwpose/dw-ll_ucoco_384.pth": "https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.pth",
+    "models/face-parse-bisent/79999_iter.pth": "https://huggingface.co/jonathandinu/face-parsing/resolve/main/79999_iter.pth",
+    "models/face-parse-bisent/resnet18-5c106cde.pth": "https://download.pytorch.org/models/resnet18-5c106cde.pth",
+    "models/sd-vae/diffusion_pytorch_model.bin": "https://huggingface.co/stabilityai/sd-vae-ft-mse/resolve/main/diffusion_pytorch_model.bin",
+    "models/sd-vae/config.json": "https://huggingface.co/stabilityai/sd-vae-ft-mse/resolve/main/config.json",
+    "models/whisper/pytorch_model.bin": "https://huggingface.co/openai/whisper-tiny/resolve/main/pytorch_model.bin",
+    "models/whisper/config.json": "https://huggingface.co/openai/whisper-tiny/resolve/main/config.json",
+    "models/whisper/preprocessor_config.json": "https://huggingface.co/openai/whisper-tiny/resolve/main/preprocessor_config.json"
+}
+
+for filepath, url in models.items():
+    if not os.path.exists(filepath):
+        download_file(url, filepath)
+
+print("All models downloaded successfully!")
+EOF
+
+RUN python download_models.py
+
+# Remove unnecessary files to reduce image size
+RUN rm -rf \
+    /root/.cache/pip \
+    /tmp/* \
+    /var/tmp/* \
+    .git \
+    download_models.py \
+    docs \
+    assets \
+    dataset \
+    *.md
+
+# Set FFmpeg path
+ENV FFMPEG_PATH=/usr/bin/ffmpeg
+
+# Create input/output directories
+RUN mkdir -p /app/input /app/output
+
+# Expose port for potential web interface
+EXPOSE 7860
+
+# Set entrypoint
+COPY <<EOF /app/entrypoint.sh
+#!/bin/bash
+set -e
+
+# Check if GPU is available
+if command -v nvidia-smi &> /dev/null; then
+    echo "GPU Status:"
+    nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv
+else
+    echo "Warning: nvidia-smi not found. GPU may not be properly configured."
+fi
+
+# Execute the command
+exec "\$@"
+EOF
+
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Default command runs MuseTalk 1.5 inference
+CMD ["python", "-m", "scripts.inference", \
+     "--inference_config", "configs/inference/test.yaml", \
+     "--result_dir", "/app/output", \
+     "--unet_model_path", "models/musetalkV15/unet.pth", \
+     "--unet_config", "models/musetalkV15/musetalk.json", \
+     "--version", "v15", \
+     "--ffmpeg_path", "/usr/bin/ffmpeg"]
