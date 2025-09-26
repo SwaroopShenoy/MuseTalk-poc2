@@ -12,7 +12,7 @@ if ! docker info > /dev/null 2>&1; then
 fi
 
 # Check if NVIDIA Docker runtime is available
-if ! docker run --rm --gpus all nvidia/cuda:12.1-base-ubuntu22.04 nvidia-smi > /dev/null 2>&1; then
+if ! docker run --rm --gpus all nvidia/cuda:12.1.0-runtime-ubuntu22.04 > /dev/null 2>&1; then
     echo "❌ NVIDIA Docker runtime not available. Please install nvidia-docker2."
     exit 1
 fi
