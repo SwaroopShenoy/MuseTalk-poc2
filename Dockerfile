@@ -60,8 +60,12 @@ RUN pip install \
     face-alignment==1.3.5 \
     resampy==0.4.2
 
-# Skip MMlab packages for now - they're mainly for training
-# Can be added later if needed for advanced pose detection
+# Install MMlab packages directly with pip (simpler than mim)
+RUN pip install \
+    mmengine==0.10.4 \
+    mmcv==2.0.1 \
+    mmdet==3.1.0 \
+    mmpose==1.1.0
 
 # Skip whisper installation - MuseTalk likely includes its own audio processing
 # If needed, can install later: pip install --no-deps openai-whisper tiktoken
