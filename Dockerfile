@@ -60,12 +60,13 @@ RUN pip install \
     face-alignment==1.3.5 \
     resampy==0.4.2
 
-# Install MMlab packages directly with pip (simpler than mim)
-RUN pip install \
-    mmengine==0.10.4 \
-    mmcv==2.0.1 \
-    mmdet==3.1.0 \
-    mmpose==1.1.0
+# Install MMlab packages using pre-built wheels
+RUN pip install --no-cache-dir -U openmim && \
+    mim install mmengine && \
+    mim install "mmcv==2.0.1" && \
+    mim install "mmdet==3.1.0" && \
+    mim install "mmpose==1.1.0" || \
+    echo "MMlab installation failed, continuing without them"
 
 # Skip whisper installation - MuseTalk likely includes its own audio processing
 # If needed, can install later: pip install --no-deps openai-whisper tiktoken
