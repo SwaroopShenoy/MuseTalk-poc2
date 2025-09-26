@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV CUDA_VISIBLE_DEVICES=0
 
-# Install system dependencies
+# Install system dependencies including all build requirements for MMlab
 RUN apt-get update && apt-get install -y \
     python3.10 \
     python3.10-dev \
@@ -23,6 +23,21 @@ RUN apt-get update && apt-get install -y \
     libgomp1 \
     cmake \
     build-essential \
+    ninja-build \
+    libopencv-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libv4l-dev \
+    libxvidcore-dev \
+    libx264-dev \
+    libgtk-3-dev \
+    libatlas-base-dev \
+    gfortran \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Python 3.10 as default
@@ -62,12 +77,13 @@ RUN pip install \
     face-alignment==1.3.5 \
     resampy==0.4.2
 
-# Just use MediaPipe and skip complicated face detection for now
-RUN pip install mediapipe && \
-    echo "Using MediaPipe for face detection"
-
-# Create a simple face detection fallback
-RUN echo 'try:\n    from mmpose.apis import inference_topdown, init_model\nexcept ImportError:\n    def inference_topdown(*args, **kwargs): return None\n    def init_model(*args, **kwargs): return None' > /app/mmpose_fallback.py
+# Install MMlab packages properly with openmim
+RUN pip install --no-cache-dir -U openmim && \
+    pip install setuptools-scm && \
+    mim install mmengine && \
+    mim install "mmcv>=2.0.0" && \
+    mim install "mmdet>=3.0.0" && \
+    mim install "mmpose>=1.0.0"
 
 # Skip whisper installation - MuseTalk likely includes its own audio processing
 # If needed, can install later: pip install --no-deps openai-whisper tiktoken
@@ -142,8 +158,8 @@ RUN rm -rf \
     dataset \
     *.md
 
-# Set FFmpeg path
-ENV FFMPEG_PATH=/usr/bin/ffmpeg
+# Add the mock mmpose to Python path
+ENV PYTHONPATH="${PYTHONPATH}:/app"
 
 # Create input/output directories
 RUN mkdir -p /app/input /app/output
