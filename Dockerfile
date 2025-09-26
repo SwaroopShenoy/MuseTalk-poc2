@@ -60,13 +60,12 @@ RUN pip install \
     face-alignment==1.3.5 \
     resampy==0.4.2
 
-# Install MMlab packages using pre-built wheels
-RUN pip install --no-cache-dir -U openmim && \
-    mim install mmengine && \
-    mim install "mmcv==2.0.1" && \
-    mim install "mmdet==3.1.0" && \
-    mim install "mmpose==1.1.0" || \
-    echo "MMlab installation failed, continuing without them"
+# Skip MMlab packages and patch the code to work without them
+RUN pip install mediapipe dlib && \
+    echo "Skipping MMlab - will use MediaPipe for face detection instead"
+
+# Patch preprocessing.py to bypass mmpose import
+RUN sed -i 's/from mmpose.apis import inference_topdown, init_model/#from mmpose.apis import inference_topdown, init_model/g' /app/musetalk/utils/preprocessing.py
 
 # Skip whisper installation - MuseTalk likely includes its own audio processing
 # If needed, can install later: pip install --no-deps openai-whisper tiktoken
