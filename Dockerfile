@@ -63,7 +63,7 @@ RUN pip install \
 # Can be added later if needed for advanced pose detection
 
 # Install whisper for audio processing
-RUN pip install --editable ./musetalk/whisper
+RUN pip install openai-whisper==20231117
 
 # Create models directory structure
 RUN mkdir -p models/{musetalk,musetalkV15,syncnet,dwpose,face-parse-bisent,sd-vae,whisper}
