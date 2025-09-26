@@ -5,6 +5,18 @@ set -e
 
 echo "🚀 Building MuseTalk Docker Image..."
 
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+    echo "❌ Docker is not running. Please start Docker first."
+    exit 1
+fi
+
+# Check if NVIDIA Docker runtime is available
+if ! docker run --rm --gpus all nvidia/cuda:12.1-base-ubuntu22.04 nvidia-smi > /dev/null 2>&1; then
+    echo "❌ NVIDIA Docker runtime not available. Please install nvidia-docker2."
+    exit 1
+fi
+
 # Create directories
 mkdir -p input output configs
 
@@ -39,9 +51,17 @@ run_inference() {
     echo "📹 Video: $video_path"
     echo "🎵 Audio: $audio_path"
     
-    # Copy files to input directory
-    cp "$video_path" input/
-    cp "$audio_path" input/
+    # Copy files to input directory if not already there
+    video_file=$(basename "$video_path")
+    audio_file=$(basename "$audio_path")
+    
+    if [[ "$video_path" != "input/$video_file" ]]; then
+        cp "$video_path" input/
+    fi
+    
+    if [[ "$audio_path" != "input/$audio_file" ]]; then
+        cp "$audio_path" input/
+    fi
     
     # Get filenames
     video_file=$(basename "$video_path")
@@ -82,8 +102,8 @@ run_shell() {
     docker run --rm -it --gpus all \
         -v "$(pwd)/input:/app/input" \
         -v "$(pwd)/output:/app/output" \
-        --entrypoint bash \
-        musetalk:latest
+        musetalk:latest \
+        bash
 }
 
 # Main command handler
