@@ -39,11 +39,12 @@ RUN git clone https://github.com/TMElyralab/MuseTalk.git .
 # Install PyTorch for CUDA 12.4 (compatible with 12.9)
 RUN pip install torch==2.5.1+cu124 torchvision==0.20.1+cu124 torchaudio==2.5.1+cu124 --index-url https://download.pytorch.org/whl/cu124
 
-# Install core dependencies 
+# Install core dependencies with compatible versions
 RUN pip install \
-    diffusers==0.21.4 \
-    transformers==4.35.2 \
-    accelerate==0.24.1 \
+    diffusers==0.29.2 \
+    transformers==4.44.2 \
+    huggingface_hub==0.24.6 \
+    accelerate==0.34.2 \
     opencv-python==4.8.1.78 \
     opencv-contrib-python==4.8.1.78 \
     scipy==1.11.4 \
@@ -145,7 +146,21 @@ RUN mkdir -p /app/input /app/output
 EXPOSE 7860
 
 # Set entrypoint
-RUN echo '#!/bin/bash\nset -e\n\n# Check if GPU is available\nif command -v nvidia-smi &> /dev/null; then\n    echo "GPU Status:"\n    nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv\nelse\n    echo "Warning: nvidia-smi not found. GPU may not be properly configured."\nfi\n\n# Execute the command\nexec "$@"' > /app/entrypoint.sh
+COPY <<EOF /app/entrypoint.sh
+#!/bin/bash
+set -e
+
+# Check if GPU is available
+if command -v nvidia-smi &> /dev/null; then
+    echo "GPU Status:"
+    nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv
+else
+    echo "Warning: nvidia-smi not found. GPU may not be properly configured."
+fi
+
+# Execute the command
+exec "\$@"
+EOF
 
 RUN chmod +x /app/entrypoint.sh
 
