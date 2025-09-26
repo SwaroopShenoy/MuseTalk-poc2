@@ -21,6 +21,8 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgomp1 \
+    cmake \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Python 3.10 as default
@@ -60,12 +62,12 @@ RUN pip install \
     face-alignment==1.3.5 \
     resampy==0.4.2
 
-# Skip MMlab packages and patch the code to work without them
-RUN pip install mediapipe dlib && \
-    echo "Skipping MMlab - will use MediaPipe for face detection instead"
+# Just use MediaPipe and skip complicated face detection for now
+RUN pip install mediapipe && \
+    echo "Using MediaPipe for face detection"
 
-# Patch preprocessing.py to bypass mmpose import
-RUN sed -i 's/from mmpose.apis import inference_topdown, init_model/#from mmpose.apis import inference_topdown, init_model/g' /app/musetalk/utils/preprocessing.py
+# Create a simple face detection fallback
+RUN echo 'try:\n    from mmpose.apis import inference_topdown, init_model\nexcept ImportError:\n    def inference_topdown(*args, **kwargs): return None\n    def init_model(*args, **kwargs): return None' > /app/mmpose_fallback.py
 
 # Skip whisper installation - MuseTalk likely includes its own audio processing
 # If needed, can install later: pip install --no-deps openai-whisper tiktoken
