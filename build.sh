@@ -9,8 +9,8 @@ echo "🚀 Building MuseTalk Docker Image..."
 mkdir -p input output configs
 
 # Build the Docker image
-echo "📦 Building Docker image (this may take 10-15 minutes)..."
-docker build -t musetalk:latest .
+#echo "📦 Building Docker image (this may take 10-15 minutes)..."
+#docker build -t musetalk:latest .
 
 echo "✅ Build complete!"
 

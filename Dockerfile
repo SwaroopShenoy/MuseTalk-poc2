@@ -145,22 +145,8 @@ RUN mkdir -p /app/input /app/output
 # Expose port for potential web interface
 EXPOSE 7860
 
-# Set entrypoint
-COPY <<EOF /app/entrypoint.sh
-#!/bin/bash
-set -e
-
-# Check if GPU is available
-if command -v nvidia-smi &> /dev/null; then
-    echo "GPU Status:"
-    nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv
-else
-    echo "Warning: nvidia-smi not found. GPU may not be properly configured."
-fi
-
-# Execute the command
-exec "\$@"
-EOF
+# Set entrypoint script
+RUN echo '#!/bin/bash\nset -e\n\n# Check if GPU is available\nif command -v nvidia-smi &> /dev/null; then\n    echo "GPU Status:"\n    nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv\nelse\n    echo "Warning: nvidia-smi not found. GPU may not be properly configured."\nfi\n\n# Execute the command\nexec "$@"' > /app/entrypoint.sh
 
 RUN chmod +x /app/entrypoint.sh
 
