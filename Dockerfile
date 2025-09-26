@@ -53,8 +53,8 @@ WORKDIR /app
 # Clone MuseTalk repository
 RUN git clone https://github.com/TMElyralab/MuseTalk.git .
 
-# Install PyTorch for CUDA 12.4 (compatible with 12.9)
-RUN pip install torch==2.5.1+cu124 torchvision==0.20.1+cu124 torchaudio==2.5.1+cu124 --index-url https://download.pytorch.org/whl/cu124
+# Install PyTorch 2.0.1 with CUDA 11.8 (has pre-built mmcv wheels)
+RUN pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
 
 # Install core dependencies with compatible versions
 RUN pip install \
@@ -77,10 +77,10 @@ RUN pip install \
     face-alignment==1.3.5 \
     resampy==0.4.2
 
-# Install MMlab packages using pre-compiled wheels from PyPI
+# Install MMlab packages with pre-built wheels for PyTorch 2.0.1/CUDA 11.8
 RUN pip install --no-cache-dir \
     mmengine==0.8.5 \
-    mmcv==2.0.1 -f https://download.openmmlab.com/mmcv/dist/cu124/torch2.5/index.html \
+    mmcv==2.0.1 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.0/index.html \
     mmdet==3.1.0 \
     mmpose==1.1.0
 
