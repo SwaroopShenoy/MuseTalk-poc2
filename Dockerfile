@@ -37,10 +37,9 @@ WORKDIR /app
 RUN git clone https://github.com/TMElyralab/MuseTalk.git .
 
 # Install PyTorch for CUDA 12.4 (compatible with 12.9)
-RUN pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu124
+RUN pip install torch==2.5.1+cu124 torchvision==0.20.1+cu124 torchaudio==2.5.1+cu124 --index-url https://download.pytorch.org/whl/cu124
 
-# Install core dependencies from requirements.txt
-# Key packages: diffusers, transformers, opencv-python, etc.
+# Install core dependencies 
 RUN pip install \
     diffusers==0.21.4 \
     transformers==4.35.2 \
@@ -53,7 +52,7 @@ RUN pip install \
     soundfile==0.12.1 \
     omegaconf==2.3.0 \
     einops==0.7.0 \
-    xformers==0.0.27 \
+    xformers==0.0.28.post3 \
     pillow==10.0.1 \
     numpy==1.24.4 \
     pydub==0.25.1 \
