@@ -142,16 +142,6 @@ ENV FFMPEG_PATH=/usr/bin/ffmpeg
 # Create input/output directories
 RUN mkdir -p /app/input /app/output
 
-# Expose port for potential web interface
-EXPOSE 7860
-
-# Set entrypoint script
-RUN echo '#!/bin/bash\nset -e\n\n# Check if GPU is available\nif command -v nvidia-smi &> /dev/null; then\n    echo "GPU Status:"\n    nvidia-smi --query-gpu=name,memory.total,memory.used --format=csv\nelse\n    echo "Warning: nvidia-smi not found. GPU may not be properly configured."\nfi\n\n# Execute the command\nexec "$@"' > /app/entrypoint.sh
-
-RUN chmod +x /app/entrypoint.sh
-
-ENTRYPOINT ["/app/entrypoint.sh"]
-
 # Default command runs MuseTalk 1.5 inference
 CMD ["python", "-m", "scripts.inference", \
      "--inference_config", "configs/inference/test.yaml", \

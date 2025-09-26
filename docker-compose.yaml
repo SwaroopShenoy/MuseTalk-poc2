@@ -14,11 +14,12 @@ services:
     volumes:
       - ./input:/app/input
       - ./output:/app/output
-      - ./configs:/app/configs  # For custom configs
+      - ./configs:/app/configs
     ports:
-      - "7860:7860"  # For Gradio interface
+      - "7860:7860"
     stdin_open: true
     tty: true
+    command: bash  # Override to keep container running
     deploy:
       resources:
         reservations:
