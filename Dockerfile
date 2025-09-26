@@ -62,8 +62,8 @@ RUN pip install \
 # Skip MMlab packages for now - they're mainly for training
 # Can be added later if needed for advanced pose detection
 
-# Install whisper for audio processing
-RUN pip install openai-whisper==20231117
+# Skip whisper installation - MuseTalk likely includes its own audio processing
+# If needed, can install later: pip install --no-deps openai-whisper tiktoken
 
 # Create models directory structure
 RUN mkdir -p models/{musetalk,musetalkV15,syncnet,dwpose,face-parse-bisent,sd-vae,whisper}
